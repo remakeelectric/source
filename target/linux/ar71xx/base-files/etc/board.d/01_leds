@@ -456,6 +456,12 @@ re450)
 	ucidef_set_led_wlan "wlan2g" "WLAN 2.4 GHz" "$board:blue:wlan2g" "phy1tpt"
 	ucidef_set_led_wlan "wlan5g" "WLAN 5 GHz" "$board:blue:wlan5g" "phy0tpt"
 	;;
+rme-eg200)
+        ucidef_set_led_netdev "wan" "WAN" "eg200:red:eth0" "eth0"
+        ucidef_set_led_wlan "wlan" "WLAN" "eg200:red:wlan" "phy0tpt"
+        ucidef_set_led_oneshot "modbus" "Modbus" "eg200:red:modbus" "100" "33"
+        ucidef_set_led_default "etactica" "etactica" "eg200:red:etactica" "ignore"
+        ;;
 smart-300)
 	ucidef_set_led_netdev "wan" "WAN" "nc-link:green:wan" "eth0"
 	ucidef_set_led_switch "lan1" "LAN1" "nc-link:green:lan1" "switch0" "0x04"
