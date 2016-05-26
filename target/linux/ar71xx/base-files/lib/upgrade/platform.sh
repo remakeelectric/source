@@ -266,6 +266,7 @@ platform_check_image() {
 	nbg460n_550n_550nh|\
 	pqi-air-pen|\
 	r602n|\
+	rme-eg200|\
 	rocket-m|\
 	rocket-m-ti|\
 	rocket-m-xw|\
