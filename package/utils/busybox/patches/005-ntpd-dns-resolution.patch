@@ -1,0 +1,52 @@
+From a1e9bc6876f6539805095e9395c604d3675c526d Mon Sep 17 00:00:00 2001
+From: Denys Vlasenko <vda.linux@googlemail.com>
+Date: Sat, 28 Oct 2017 17:54:24 +0200
+Subject: ntpd: perform DNS resolution out of send/receive loop - closes 10466
+
+Bad case: send request to server1good.com; then try to resolve server2bad.com -
+this fails, and failure takes ~5 secs; then receive server1's
+response 5 seconds later. We'll never sync up in this case...
+
+function                                             old     new   delta
+ntpd_main                                           1079    1106     +27
+
+Signed-off-by: Denys Vlasenko <vda.linux@googlemail.com>
+---
+ networking/ntpd.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/networking/ntpd.c b/networking/ntpd.c
+index 4f881ea..8f792d1 100644
+--- a/networking/ntpd.c
++++ b/networking/ntpd.c
+@@ -866,10 +866,8 @@ do_sendto(int fd,
+ static void
+ send_query_to_peer(peer_t *p)
+ {
+-	if (!p->p_lsa) {
+-		if (!resolve_peer_hostname(p))
+-			return;
+-	}
++	if (!p->p_lsa)
++		return;
+ 
+ 	/* Why do we need to bind()?
+ 	 * See what happens when we don't bind:
+@@ -2360,6 +2358,14 @@ int ntpd_main(int argc UNUSED_PARAM, char **argv)
+ 		int nfds, timeout;
+ 		double nextaction;
+ 
++		/* Resolve peer names to IPs, if not resolved yet */
++		for (item = G.ntp_peers; item != NULL; item = item->link) {
++			peer_t *p = (peer_t *) item->data;
++
++			if (p->next_action_time <= G.cur_time && !p->p_lsa)
++				resolve_peer_hostname(p);
++		}
++
+ 		/* Nothing between here and poll() blocks for any significant time */
+ 
+ 		nextaction = G.cur_time + 3600;
+-- 
+cgit v0.12
+
