@@ -1,0 +1,36 @@
+commit 580896a42194a7f64c822081683c874bcaf2be11
+Author: Karl Palsson <karlp@etactica.com>
+Date:   Fri Feb 2 16:41:12 2018 +0000
+
+    lua: use lua5.1+ standard names instead of 5.0 compat
+    
+    luaL_Reg is the standard name, luaL_reg is for backwards compatibility
+    luaI_openlib is likewise for compatiblity.
+    
+    Using the "standard" names fixes compilation of uloop with lua-5.3, and
+    makes no difference for 5.1
+    
+    Signed-off-by: Karl Palsson <karlp@etactica.com>
+
+diff --git a/lua/uloop.c b/lua/uloop.c
+index 1b0389f..d9e0eb5 100644
+--- a/lua/uloop.c
++++ b/lua/uloop.c
+@@ -57,7 +57,7 @@ ul_create_userdata(lua_State *L, size_t size, const luaL_Reg *reg, lua_CFunction
+ 	lua_pushvalue(L, -1);
+ 	lua_setmetatable(L, -3);
+ 	lua_pushvalue(L, -2);
+-	luaI_openlib(L, NULL, reg, 1);
++	luaL_openlib(L, NULL, reg, 1);
+ 	lua_pushvalue(L, -2);
+ 
+ 	return ret;
+@@ -408,7 +408,7 @@ static int ul_end(lua_State *L)
+ 	return 1;
+ }
+ 
+-static luaL_reg uloop_func[] = {
++static luaL_Reg uloop_func[] = {
+ 	{"init", ul_init},
+ 	{"run", ul_run},
+ 	{"timer", ul_timer},
