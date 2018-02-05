@@ -1,0 +1,63 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 57804cf..767cfac 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -3,7 +3,7 @@ INCLUDE(CheckLibraryExists)
+ INCLUDE(CheckFunctionExists)
+ 
+ PROJECT(ubox C)
+-ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -g3 -Wmissing-declarations)
++ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -g3 -Wmissing-declarations -DLUA_COMPAT_5_1)
+ 
+ OPTION(BUILD_LUA "build Lua plugin" ON)
+ OPTION(BUILD_EXAMPLES "build examples" ON)
+diff --git a/lua/CMakeLists.txt b/lua/CMakeLists.txt
+index 34c9ab1..d270f61 100644
+--- a/lua/CMakeLists.txt
++++ b/lua/CMakeLists.txt
+@@ -5,9 +5,12 @@ PROJECT(uloop C)
+ SET(CMAKE_INSTALL_PREFIX /)
+ 
+ IF(NOT LUA_CFLAGS)
+-	pkg_search_module(LUA lua5.1 lua-5.1)
++	MESSAGE(WARNING "KARL   Attempting to use pkg_search_module....")
++	pkg_search_module(LUA lua lua5.1 lua-5.1)
+ ENDIF()
+ 
++MESSAGE(WARNING "KARL   Ok, lua_cflags are now ${LUA_CFLAGS}")
++
+ ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -g3 -I.. ${LUA_CFLAGS})
+ LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
+ 
+@@ -15,7 +18,9 @@ IF(APPLE)
+ 	SET(CMAKE_SHARED_MODULE_CREATE_C_FLAGS "${CMAKE_SHARED_MODULE_CREATE_C_FLAGS} -undefined dynamic_lookup")
+ ENDIF(APPLE)
+ 
++#LUAPATH=/usr/lib/lua
+ IF(NOT LUAPATH)
++	MESSAGE(WARNING "KARL not luapath, trying this crazy test bullshit")
+ 	EXECUTE_PROCESS(
+ 		COMMAND  lua -e "for k in string.gmatch(package.cpath .. \";\", \"([^;]+)/..so;\") do if k:sub(1,1) == \"/\" then print(k) break end end"
+ 		OUTPUT_VARIABLE LUAPATH
+diff --git a/lua/uloop.c b/lua/uloop.c
+index d9e0eb5..d829386 100644
+--- a/lua/uloop.c
++++ b/lua/uloop.c
+@@ -57,7 +57,7 @@ ul_create_userdata(lua_State *L, size_t size, const luaL_Reg *reg, lua_CFunction
+ 	lua_pushvalue(L, -1);
+ 	lua_setmetatable(L, -3);
+ 	lua_pushvalue(L, -2);
+-	luaL_openlib(L, NULL, reg, 1);
++	luaL_register(L, NULL, reg);   // mayyyybe?
+ 	lua_pushvalue(L, -2);
+ 
+ 	return ret;
+@@ -432,7 +432,7 @@ int luaopen_uloop(lua_State *L)
+ 	lua_createtable(L, 1, 0);
+ 	lua_setglobal(L, "__uloop_fds");
+ 
+-	luaL_openlib(L, "uloop", uloop_func, 0);
++	luaL_register(L, "uloop", uloop_func);
+ 	lua_pushstring(L, "_VERSION");
+ 	lua_pushstring(L, "1.0");
+ 	lua_rawset(L, -3);
